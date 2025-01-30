@@ -27,11 +27,11 @@ class Pipeline:
         self.valves = self.Valves(
             **{
                 "pipelines": ["*"],
-                "DB_HOST": os.getenv("PG_HOST", "http://192.168.1.52"),
+                "DB_HOST": os.getenv("PG_HOST", "http://10.104.85.191"),
                 "DB_PORT": os.getenv("PG_PORT", '5432'),
                 "DB_USER": os.getenv("PG_USER", "postgres"),
                 "DB_PASSWORD": os.getenv("PG_PASSWORD", "postgres"),
-                "DB_DATABASE": os.getenv("PG_DB", "postgres"),
+                "DB_DATABASE": os.getenv("PG_DB", "prueba"),
                 "DB_TABLES": ["primeros_50_registros"],
             }
         )
