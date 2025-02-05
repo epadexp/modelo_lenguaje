@@ -1,5 +1,6 @@
 import os
 import logging
+import psycopg2
 
 
 from pydantic import BaseModel
@@ -41,7 +42,7 @@ class Pipeline:
             }
         )
 
-        
+
     def init_db_connection(self):
         connection_params = {
             'dbname': self.valves.DB_DATABASE,
@@ -50,3 +51,9 @@ class Pipeline:
             'host': self.valves.DB_HOST.split('//')[-1],  # Remove the http:// or https:// prefix if present
             'port': self.valves.DB_PORT
         }
+    
+        try:
+            self.conn = psycopg2.connect(**connection_params)
+            print("Connection to PostgreSQL established successfully")
+        except Exception as e:
+            print(f"Error connecting to PostgreSQL: {e}")
