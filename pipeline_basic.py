@@ -40,31 +40,22 @@ class Pipeline:
         logging.info(f"Pipeline '{self.name}' initialized with configuration: {self.valves.dict()}")
 
 
-    def connect_to_db(self):
-        connection_params = {
-            'dbname': self.valves.DB_DATABASE,
-            'user': self.valves.DB_USER,
-            'password': self.valves.DB_PASSWORD,
-            'host': self.valves.DB_HOST.split('//')[-1],  # Remove the http:// or https:// prefix if present
-            'port': self.valves.DB_PORT
-        }
+    # def connect_to_db(self):
+    #     connection_params = {
+    #         'dbname': self.valves.DB_DATABASE,
+    #         'user': self.valves.DB_USER,
+    #         'password': self.valves.DB_PASSWORD,
+    #         'host': self.valves.DB_HOST.split('//')[-1],  # Remove the http:// or https:// prefix if present
+    #         'port': self.valves.DB_PORT
+    #     }
 
-          # Intentar establecer la conexión
-        try:
-            self.conn = psycopg2.connect(**connection_params)
-            self.conn.set_client_encoding('UTF8')  # Establecer explícitamente la codificación a UTF8
-            print("Connection to PostgreSQL established successfully")
-        except Exception as e:
-            print(f"Error connecting to PostgreSQL: {e}")
-
-    def pipe(self, question: str):
-        # Intentar establecer la conexión a la base de datos
-        if self.connect_to_db():
-            return "¡Conexión exitosa con la base de datos!"
-        else:
-            return "Error al intentar conectar con la base de datos. Por favor, verifica la configuración."
-
-    
+    #       # Intentar establecer la conexión
+    #     try:
+    #         self.conn = psycopg2.connect(**connection_params)
+    #         self.conn.set_client_encoding('UTF8')  # Establecer explícitamente la codificación a UTF8
+    #         print("Connection to PostgreSQL established successfully")
+    #     except Exception as e:
+    #         print(f"Error connecting to PostgreSQL: {e}")
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         # Use the established psycopg2 connection to create a SQLAlchemy engine
