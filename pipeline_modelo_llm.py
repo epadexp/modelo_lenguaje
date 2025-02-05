@@ -3,6 +3,8 @@ import logging
 import psycopg2
 import os
 import json
+import aiohttp
+import asyncio
 from pydantic import BaseModel
 from typing import List, Union, Generator, Iterator
 
@@ -21,6 +23,7 @@ class Pipeline:
     def __init__(self):
         self.name = "Modelo LLM Pipeline"
         self.conn = None
+        self.cur = None
         self.nlsql_response = ""
 
         self.valves = self.Valves(
@@ -73,6 +76,19 @@ class Pipeline:
     async def on_shutdown(self):
         self.cur.close()
         self.conn.close()
+
+    async def make_request_with_retry(self, url, params, retries=3, timeout=10):
+        for attempt in range(retries):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url, params=params, timeout=timeout) as response:
+                        response.raise_for_status()
+                        return await response.text()
+            except (aiohttp.ClientResponseError, aiohttp.ClientPayloadError, aiohttp.ClientConnectionError) as e:
+                logging.error(f"Attempt {attempt + 1} failed with error: {e}")
+                if attempt + 1 == retries:
+                    raise
+                await asyncio.sleep(2 ** attempt)  # Exponential backoff
 
     def query_from_llm(self, user_message: str) -> str:
         """
