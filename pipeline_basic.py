@@ -133,13 +133,13 @@ class Pipeline:
         self.engine = create_engine(f"postgresql+psycopg2://{self.valves.DB_USER}:{self.valves.DB_PASSWORD}@{self.valves.DB_HOST.split('//')[-1]}:{self.valves.DB_PORT}/{self.valves.DB_DATABASE}")
         sql_database = SQLDatabase(self.engine, include_tables=self.valves.DB_TABLES)
 
-        llm = OpenAILike(
-            model="NousResearch/Meta-Llama-3-8B-Instruct",
-            api_base="http://10.1.152.55:8012/v1",
-            api_key="abc-123",
-            max_tokens=100,
-            stopping_ids=[128009, 128001, 128000]
-        )
+        # llm = OpenAILike(
+        #     model="NousResearch/Meta-Llama-3-8B-Instruct",
+        #     api_base="http://10.1.152.55:8012/v1",
+        #     api_key="abc-123",
+        #     max_tokens=100,
+        #     stopping_ids=[128009, 128001, 128000]
+        # )
         
         
 
