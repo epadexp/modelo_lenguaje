@@ -21,7 +21,7 @@ class Pipeline:
         DB_TABLES: List[str]
 
     def __init__(self):
-        self.name = "Basic Pipeline"
+        self.name = "Repetir Mensaje Pipeline"
         self.conn = None
         self.nlsql_response = ""
 
