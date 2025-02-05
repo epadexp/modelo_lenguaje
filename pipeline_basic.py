@@ -40,3 +40,13 @@ class Pipeline:
                 "TEXT_TO_SQL_MODEL": "NousResearch/Meta-Llama-3-8B-Instruct"
             }
         )
+
+        
+    def init_db_connection(self):
+        connection_params = {
+            'dbname': self.valves.DB_DATABASE,
+            'user': self.valves.DB_USER,
+            'password': self.valves.DB_PASSWORD,
+            'host': self.valves.DB_HOST.split('//')[-1],  # Remove the http:// or https:// prefix if present
+            'port': self.valves.DB_PORT
+        }
