@@ -57,3 +57,11 @@ class Pipeline:
             print("Connection to PostgreSQL established successfully")
         except Exception as e:
             print(f"Error connecting to PostgreSQL: {e}")
+
+
+        # Create a cursor object
+        self.cur = self.conn.cursor()
+
+
+
+    
