@@ -9,6 +9,7 @@ import asyncio
 from pydantic import BaseModel
 from typing import List, Union, Generator, Iterator
 from llama_index.core import SQLDatabase
+from llama_index.llms.openai_like import OpenAILike
 from sqlalchemy import create_engine
 
 
@@ -131,6 +132,113 @@ class Pipeline:
         # Use the established psycopg2 connection to create a SQLAlchemy engine
         self.engine = create_engine(f"postgresql+psycopg2://{self.valves.DB_USER}:{self.valves.DB_PASSWORD}@{self.valves.DB_HOST.split('//')[-1]}:{self.valves.DB_PORT}/{self.valves.DB_DATABASE}")
         sql_database = SQLDatabase(self.engine, include_tables=self.valves.DB_TABLES)
+
+        llm = OpenAILike(
+            model="NousResearch/Meta-Llama-3-8B-Instruct",
+            api_base="http://10.1.152.55:8012/v1",
+            api_key="abc-123",
+            max_tokens=100,
+            stopping_ids=[128009, 128001, 128000]
+        )
+        
+        
+
+        text_to_sql_prompt = """
+        <|begin_of_text|><|start_header_id|>system<|end_header_id|>    
+        You are a helpful AI Assistant providing PostgreSQL commands to users.
+        Make sure to always use the stop token you were trained on at the end of a response: <|eot_id|>
+        
+        Given an input question, create a syntactically correct PostgreSQL query to run.
+        You can order the results by a relevant column to return the most interesting examples in the database.
+        Unless the user specifies in the question a specific number of examples to obtain, query for at most 5 results using the LIMIT clause as per Postgres.
+        Never query for all the columns from a specific table, only ask for a few relevant columns given the question.
+        You should use DISTINCT statements and avoid returning duplicates wherever possible.
+        Pay attention to use only the column names that you can see in the schema description. Be careful to not query for columns that do not exist. Pay attention to which column is in which table. Also, qualify column names with the table name when needed. 
+        
+        
+        You are required to use the following format, each taking one line:
+        <|start_header_id|>user<|end_header_id|>
+        
+        Only use tables listed below.
+        movies
+        
+        Only use columns listed below.
+        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        Question: How many rows in the database?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        
+        SQLQuery: SELECT COUNT(*) FROM "movies"<|eot_id|>
+        
+        <|start_header_id|>user<|end_header_id|>
+        Only use tables listed below.
+        movies
+        
+        Only use columns listed below.
+        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        Question: How many comedy movies in 1995?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        
+        SQLQuery: SELECT COUNT(*) FROM "movies" WHERE "Release Year" = 1995 AND "genre" = 'comedy'<|start_header_id|>user<|end_header_id|>
+        
+        Only use tables listed below.
+        movies
+        
+        Only use columns listed below.
+        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        Question: {query_str}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        """
+        
+        
+        
+        synthesis_prompt = """
+        <|begin_of_text|><|start_header_id|>system<|end_header_id|>    
+        You are a helpful AI Assistant synthesizing the response from a PostgreSQL query.
+        Make sure to always use the stop token you were trained on at the end of a response: <|eot_id|>
+        
+        You are required to use the following format, each taking one line:
+        <|start_header_id|>user<|end_header_id|>
+        
+        SQLResponse: 
+        
+        
+        
+        ******** edit this *********
+        
+        
+        
+        Only use tables listed below.
+        movies
+        
+        Only use columns listed below.
+        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        Question: How many rows in the database?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        
+        SQLQuery: SELECT COUNT(*) FROM "movies"<|eot_id|>
+        
+        <|start_header_id|>user<|end_header_id|>
+        Only use tables listed below.
+        movies
+        
+        Only use columns listed below.
+        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        Question: How many comedy movies in 1995?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        
+        SQLQuery: SELECT COUNT(*) FROM "movies" WHERE "Release Year" = 1995 AND "genre" = 'comedy'<|start_header_id|>user<|end_header_id|>
+        
+        Only use tables listed below.
+        movies
+        
+        Only use columns listed below.
+        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        Question: {query_str}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        """
+
+
+    
 
 
 
