@@ -143,99 +143,99 @@ class Pipeline:
         
         
 
-        text_to_sql_prompt = """
-        <|begin_of_text|><|start_header_id|>system<|end_header_id|>    
-        You are a helpful AI Assistant providing PostgreSQL commands to users.
-        Make sure to always use the stop token you were trained on at the end of a response: <|eot_id|>
+        # text_to_sql_prompt = """
+        # <|begin_of_text|><|start_header_id|>system<|end_header_id|>    
+        # You are a helpful AI Assistant providing PostgreSQL commands to users.
+        # Make sure to always use the stop token you were trained on at the end of a response: <|eot_id|>
         
-        Given an input question, create a syntactically correct PostgreSQL query to run.
-        You can order the results by a relevant column to return the most interesting examples in the database.
-        Unless the user specifies in the question a specific number of examples to obtain, query for at most 5 results using the LIMIT clause as per Postgres.
-        Never query for all the columns from a specific table, only ask for a few relevant columns given the question.
-        You should use DISTINCT statements and avoid returning duplicates wherever possible.
-        Pay attention to use only the column names that you can see in the schema description. Be careful to not query for columns that do not exist. Pay attention to which column is in which table. Also, qualify column names with the table name when needed. 
-        
-        
-        You are required to use the following format, each taking one line:
-        <|start_header_id|>user<|end_header_id|>
-        
-        Only use tables listed below.
-        movies
-        
-        Only use columns listed below.
-        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
-        
-        Question: How many rows in the database?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-        
-        SQLQuery: SELECT COUNT(*) FROM "movies"<|eot_id|>
-        
-        <|start_header_id|>user<|end_header_id|>
-        Only use tables listed below.
-        movies
-        
-        Only use columns listed below.
-        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
-        
-        Question: How many comedy movies in 1995?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-        
-        SQLQuery: SELECT COUNT(*) FROM "movies" WHERE "Release Year" = 1995 AND "genre" = 'comedy'<|start_header_id|>user<|end_header_id|>
-        
-        Only use tables listed below.
-        movies
-        
-        Only use columns listed below.
-        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
-        
-        Question: {query_str}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-        """
+        # Given an input question, create a syntactically correct PostgreSQL query to run.
+        # You can order the results by a relevant column to return the most interesting examples in the database.
+        # Unless the user specifies in the question a specific number of examples to obtain, query for at most 5 results using the LIMIT clause as per Postgres.
+        # Never query for all the columns from a specific table, only ask for a few relevant columns given the question.
+        # You should use DISTINCT statements and avoid returning duplicates wherever possible.
+        # Pay attention to use only the column names that you can see in the schema description. Be careful to not query for columns that do not exist. Pay attention to which column is in which table. Also, qualify column names with the table name when needed. 
         
         
+        # You are required to use the following format, each taking one line:
+        # <|start_header_id|>user<|end_header_id|>
         
-        synthesis_prompt = """
-        <|begin_of_text|><|start_header_id|>system<|end_header_id|>    
-        You are a helpful AI Assistant synthesizing the response from a PostgreSQL query.
-        Make sure to always use the stop token you were trained on at the end of a response: <|eot_id|>
+        # Only use tables listed below.
+        # movies
         
-        You are required to use the following format, each taking one line:
-        <|start_header_id|>user<|end_header_id|>
+        # Only use columns listed below.
+        # [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
         
-        SQLResponse: 
+        # Question: How many rows in the database?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        
+        # SQLQuery: SELECT COUNT(*) FROM "movies"<|eot_id|>
+        
+        # <|start_header_id|>user<|end_header_id|>
+        # Only use tables listed below.
+        # movies
+        
+        # Only use columns listed below.
+        # [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        # Question: How many comedy movies in 1995?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        
+        # SQLQuery: SELECT COUNT(*) FROM "movies" WHERE "Release Year" = 1995 AND "genre" = 'comedy'<|start_header_id|>user<|end_header_id|>
+        
+        # Only use tables listed below.
+        # movies
+        
+        # Only use columns listed below.
+        # [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        # Question: {query_str}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        # """
         
         
         
-        ******** edit this *********
+        # synthesis_prompt = """
+        # <|begin_of_text|><|start_header_id|>system<|end_header_id|>    
+        # You are a helpful AI Assistant synthesizing the response from a PostgreSQL query.
+        # Make sure to always use the stop token you were trained on at the end of a response: <|eot_id|>
+        
+        # You are required to use the following format, each taking one line:
+        # <|start_header_id|>user<|end_header_id|>
+        
+        # SQLResponse: 
         
         
         
-        Only use tables listed below.
-        movies
+        # ******** edit this *********
         
-        Only use columns listed below.
-        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
         
-        Question: How many rows in the database?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
         
-        SQLQuery: SELECT COUNT(*) FROM "movies"<|eot_id|>
+        # Only use tables listed below.
+        # movies
         
-        <|start_header_id|>user<|end_header_id|>
-        Only use tables listed below.
-        movies
+        # Only use columns listed below.
+        # [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
         
-        Only use columns listed below.
-        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        # Question: How many rows in the database?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
         
-        Question: How many comedy movies in 1995?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        # SQLQuery: SELECT COUNT(*) FROM "movies"<|eot_id|>
         
-        SQLQuery: SELECT COUNT(*) FROM "movies" WHERE "Release Year" = 1995 AND "genre" = 'comedy'<|start_header_id|>user<|end_header_id|>
+        # <|start_header_id|>user<|end_header_id|>
+        # Only use tables listed below.
+        # movies
         
-        Only use tables listed below.
-        movies
+        # Only use columns listed below.
+        # [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
         
-        Only use columns listed below.
-        [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        # Question: How many comedy movies in 1995?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
         
-        Question: {query_str}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-        """
+        # SQLQuery: SELECT COUNT(*) FROM "movies" WHERE "Release Year" = 1995 AND "genre" = 'comedy'<|start_header_id|>user<|end_header_id|>
+        
+        # Only use tables listed below.
+        # movies
+        
+        # Only use columns listed below.
+        # [('Release Year',), ('title',), ('Origin/Ethnicity',), ('director',), ('Cast',), ('genre',), ('Wiki Page',), ('plot',)]
+        
+        # Question: {query_str}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        # """
 
 
     
