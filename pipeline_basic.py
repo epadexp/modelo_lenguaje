@@ -62,6 +62,29 @@ class Pipeline:
         # Create a cursor object
         self.cur = self.conn.cursor()
 
+        # Query to get the list of tables
+        self.cur.execute("""
+            SELECT table_schema, table_name
+            FROM information_schema.tables
+            WHERE table_type = 'BASE TABLE'
+            AND table_schema NOT IN ('information_schema', 'pg_catalog');
+        """)
+
+        # Fetch and print the table names
+        tables = self.cur.fetchall()
+        print("Tables in the database:")
+        for schema, table in tables:
+            print(f"{schema}.{table}")
+        
+        
+        # Query to get the column names
+        self.cur.execute("""SELECT json_object_keys(to_json(json_populate_record(NULL::public.movies, '{}'::JSON)))""")
+        
+        #Fetch and print the column names
+        columns = self.cur.fetchall()
+        print("Columns in the database:")
+        print(f"{columns}")
+
 
 
     
