@@ -137,3 +137,4 @@ class Pipeline:
         except Exception as e:
                 logging.error(f"Error al obtener las tablas: {e}")
                 return f"Error al obtener las tablas: {e}"
+
