@@ -52,11 +52,10 @@ class Pipeline:
           # Intentar establecer la conexión
         try:
             self.conn = psycopg2.connect(**connection_params)
-            logging.info("Successfully connected to the database")
+            self.conn.set_client_encoding('UTF8')  # Establecer explícitamente la codificación a UTF8
+            print("Connection to PostgreSQL established successfully")
         except Exception as e:
-            logging.error(f"Failed to connect to database: {e}")
-            raise
-
+            print(f"Error connecting to PostgreSQL: {e}")
 
     def process_question(self, question: str):
         # Intentar establecer la conexión a la base de datos
