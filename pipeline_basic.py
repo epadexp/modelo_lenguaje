@@ -57,7 +57,7 @@ class Pipeline:
         except Exception as e:
             print(f"Error connecting to PostgreSQL: {e}")
 
-    def process_question(self, question: str):
+    def pipe(self, question: str):
         # Intentar establecer la conexión a la base de datos
         if self.connect_to_db():
             return "¡Conexión exitosa con la base de datos!"
