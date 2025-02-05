@@ -4,7 +4,7 @@ import psycopg2
 
 
 from pydantic import BaseModel
-from typing import List
+from typing import List, Union, Generator, Iterator
 
 
 
@@ -63,6 +63,27 @@ class Pipeline:
             return "¡Conexión exitosa con la base de datos!"
         else:
             return "Error al intentar conectar con la base de datos. Por favor, verifica la configuración."
+
+    
+
+    def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
+        # Use the established psycopg2 connection to create a SQLAlchemy engine
+        #self.engine = create_engine(f"postgresql+psycopg2://{self.valves.DB_USER}:{self.valves.DB_PASSWORD}@{self.valves.DB_HOST.split('//')[-1]}:{self.valves.DB_PORT}/{self.valves.DB_DATABASE}")
+        
+        
+        try:
+            conn = psycopg2.connect(
+                database=self.valves.DB_DATABASE,
+                user=self.valves.DB_USER,
+                password=self.valves.DB_PASSWORD,
+                host=self.valves.DB_HOST.split('//')[-1],
+                port=self.valves.DB_PORT
+                )
+
+            return "Conexión correcta"
+
+        except Exception as e:
+            print(f"Error connecting to PostgreSQL: {e}")
 
         
 
