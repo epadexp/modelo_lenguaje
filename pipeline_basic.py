@@ -21,7 +21,7 @@ class Pipeline:
         DB_TABLES: List[str]
 
     def __init__(self):
-        self.name = "Database RAG Pipeline"
+        self.name = "Basic Pipeline"
         self.conn = None
         self.nlsql_response = ""
 
