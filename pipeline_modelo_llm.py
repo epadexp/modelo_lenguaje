@@ -54,7 +54,8 @@ class Pipeline:
             self.cur = self.conn.cursor()
 
         except Exception as e:
-            print(f"Error connecting to PostgreSQL: {e}")
+            logging.error(f"Error connecting to PostgreSQL: {e}")
+            raise  # Lanza la excepción para que puedas capturarla fuera si es necesario
 
     async def on_startup(self):
         self.init_db_connection()
@@ -82,40 +83,48 @@ class Pipeline:
         
         # Extraer la palabra clave de la consulta del usuario
         keyword = user_message.lower().split("mostrar tablas que contengan")[-1].strip()
-  
+
         try:
-                # Establecer la conexión con la base de datos si no está establecida
-                if not self.conn:
-                    self.init_db_connection()
+            # Si no tenemos la conexión, la inicializamos
+            if not self.conn:
+                self.init_db_connection()
 
-                # Consultar las tablas de la base de datos
-                self.cur.execute("""
-                    SELECT table_schema, table_name
-                    FROM information_schema.tables
-                    WHERE table_type = 'BASE TABLE'
-                    AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                    AND table_name ILIKE %s;
-                """, (f"%{keyword}%",))
+            if not self.cur:  # Si el cursor no está creado, lo creamos
+                self.cur = self.conn.cursor()
 
-                # Obtener los resultados
-                tables = self.cur.fetchall()
+            # Consultar las tablas de la base de datos
+            self.cur.execute("""
+                SELECT table_schema, table_name
+                FROM information_schema.tables
+                WHERE table_type = 'BASE TABLE'
+                AND table_schema NOT IN ('information_schema', 'pg_catalog')
+                AND table_name ILIKE %s;
+            """, (f"%{keyword}%",))
 
-                # Si no hay tablas que coincidan con la palabra clave, devolver el mensaje apropiado
-                if not tables:
-                    return f"No hay tablas que contengan la palabra: {keyword}"
+            # Obtener los resultados
+            tables = self.cur.fetchall()
 
-                # Crear una lista de tablas
-                table_list = [f"{schema}.{table}" for schema, table in tables]
+            # Si no hay tablas que coincidan con la palabra clave, devolver el mensaje apropiado
+            if not tables:
+                return f"No hay tablas que contengan la palabra: {keyword}"
 
-                # Generar contexto para el modelo Llama
-                context = f"Las tablas en la base de datos que contienen '{keyword}' son: {', '.join(table_list)}. ¿Cómo puedo ayudarte con estas tablas?"
+            # Crear una lista de tablas
+            table_list = [f"{schema}.{table}" for schema, table in tables]
 
-                # Llamar a Llama a través de Ollama para obtener una respuesta
+            # Generar contexto para el modelo Llama
+            context = f"Las tablas en la base de datos que contienen '{keyword}' son: {', '.join(table_list)}. ¿Cómo puedo ayudarte con estas tablas?"
+
+            # Llamar a Llama a través de Ollama para obtener una respuesta
+            try:
                 response = ollama.chat(model="llama", messages=[{"role": "user", "content": context}])
+                response_text = response['text']
+            except Exception as e:
+                logging.error(f"Error llamando a Ollama: {e}")
+                response_text = "Error al procesar la solicitud con el modelo Llama."
 
-                # Devolver la respuesta generada por Llama
-                return response['text']
+            # Devolver la respuesta generada por Llama
+            return response_text
 
         except Exception as e:
-                logging.error(f"Error al obtener las tablas: {e}")
-                return f"Error al obtener las tablas: {e}"
+            logging.error(f"Error al obtener las tablas: {e}")
+            return f"Error al obtener las tablas: {e}"
