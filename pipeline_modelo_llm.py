@@ -22,6 +22,7 @@ class Pipeline:
     def __init__(self):
         self.name = "Lista Tablas Pipeline"
         self.conn = None
+        self.cur = None  # Añadimos el cursor como atributo
         self.nlsql_response = ""
 
         self.valves = self.Valves(
@@ -48,32 +49,21 @@ class Pipeline:
         try:
             self.conn = psycopg2.connect(**connection_params)
             print("Connection to PostgreSQL established successfully")
+
+            # Crear un cursor y asignarlo como atributo
+            self.cur = self.conn.cursor()
+
         except Exception as e:
             print(f"Error connecting to PostgreSQL: {e}")
-
-        # Create a cursor object
-        self.cur = self.conn.cursor()
-
-        # Query to get the list of tables
-        self.cur.execute("""
-            SELECT table_schema, table_name
-            FROM information_schema.tables
-            WHERE table_type = 'BASE TABLE'
-            AND table_schema NOT IN ('information_schema', 'pg_catalog');
-        """)
-
-        # Fetch and print the table names
-        tables = self.cur.fetchall()
-        print("Tables in the database:")
-        for schema, table in tables:
-            print(f"{schema}.{table}")
 
     async def on_startup(self):
         self.init_db_connection()
 
     async def on_shutdown(self):
-        self.cur.close()
-        self.conn.close()
+        if self.cur:
+            self.cur.close()
+        if self.conn:
+            self.conn.close()
 
     async def make_request_with_retry(self, url, params, retries=3, timeout=10):
         for attempt in range(retries):
@@ -94,19 +84,12 @@ class Pipeline:
         keyword = user_message.lower().split("mostrar tablas que contengan")[-1].strip()
   
         try:
-                # Establecer la conexión con la base de datos
-                conn = psycopg2.connect(
-                    database=self.valves.DB_DATABASE,
-                    user=self.valves.DB_USER,
-                    password=self.valves.DB_PASSWORD,
-                    host=self.valves.DB_HOST.split('//')[-1],
-                    port=self.valves.DB_PORT
-                )
-                conn.autocommit = True
-                cursor = conn.cursor()
+                # Establecer la conexión con la base de datos si no está establecida
+                if not self.conn:
+                    self.init_db_connection()
 
                 # Consultar las tablas de la base de datos
-                cursor.execute("""
+                self.cur.execute("""
                     SELECT table_schema, table_name
                     FROM information_schema.tables
                     WHERE table_type = 'BASE TABLE'
@@ -115,7 +98,7 @@ class Pipeline:
                 """, (f"%{keyword}%",))
 
                 # Obtener los resultados
-                tables = cursor.fetchall()
+                tables = self.cur.fetchall()
 
                 # Si no hay tablas que coincidan con la palabra clave, devolver el mensaje apropiado
                 if not tables:
@@ -123,10 +106,6 @@ class Pipeline:
 
                 # Crear una lista de tablas
                 table_list = [f"{schema}.{table}" for schema, table in tables]
-
-                # Cerrar la conexión
-                cursor.close()
-                conn.close()
 
                 # Generar contexto para el modelo Llama
                 context = f"Las tablas en la base de datos que contienen '{keyword}' son: {', '.join(table_list)}. ¿Cómo puedo ayudarte con estas tablas?"
