@@ -92,10 +92,9 @@ class Pipeline:
                 await asyncio.sleep(2 ** attempt)  # Exponential backoff
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
-        """ 
-        Establece una conexión con una base de datos PostgreSQL. 
-       
-        """ 
+        
+        # Extraer la palabra clave de la consulta del usuario
+        keyword = user_message.lower().split("mostrar tablas que contengan")[-1].strip()
   
         try:
                 # Establecer la conexión con la base de datos
@@ -114,11 +113,16 @@ class Pipeline:
                     SELECT table_schema, table_name
                     FROM information_schema.tables
                     WHERE table_type = 'BASE TABLE'
-                    AND table_schema NOT IN ('information_schema', 'pg_catalog');
-                """)
+                    AND table_schema NOT IN ('information_schema', 'pg_catalog')
+                    AND table_name ILIKE %s;
+            """, (f"%{keyword}%",))
 
                 # Obtener los resultados
                 tables = cursor.fetchall()
+
+                # Si no hay tablas que coincidan con la palabra clave, devolver el mensaje apropiado
+                if not tables:
+                    return f"No hay tablas que contenga la palabra: {keyword}"
 
                 # Crear una lista de tablas
                 table_list = [f"{schema}.{table}" for schema, table in tables]
