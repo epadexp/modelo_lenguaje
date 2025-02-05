@@ -1,12 +1,16 @@
-import subprocess
-import logging
-import psycopg2
 import os
-import json
+import logging
+import psycopg2 # Biblioteca popular para interacturar con bases de datos PostgreSQL
 import aiohttp
 import asyncio
+import subprocess
+import json
+
+
 from pydantic import BaseModel
 from typing import List, Union, Generator, Iterator
+
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -21,9 +25,8 @@ class Pipeline:
         DB_TABLES: List[str]
 
     def __init__(self):
-        self.name = "Modelo LLM Pipeline"
+        self.name = "Lista Tablas Pipeline"
         self.conn = None
-        self.cur = None
         self.nlsql_response = ""
 
         self.valves = self.Valves(
@@ -57,7 +60,7 @@ class Pipeline:
         self.cur = self.conn.cursor()
 
         # Query to get the list of tables
-        self.cur.execute(""" 
+        self.cur.execute("""
             SELECT table_schema, table_name
             FROM information_schema.tables
             WHERE table_type = 'BASE TABLE'
@@ -90,6 +93,7 @@ class Pipeline:
                     raise
                 await asyncio.sleep(2 ** attempt)  # Exponential backoff
 
+
     def query_from_llm(self, user_message: str) -> str:
         """
         Usa Llama (Ollama) para convertir una pregunta del usuario en una consulta SQL.
@@ -109,15 +113,12 @@ class Pipeline:
             return "Error al generar la consulta SQL."
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
-        """
-        Procesa el mensaje del usuario, convierte la pregunta en una consulta SQL y ejecuta la consulta.
-        """
-        # Usar el LLM (Llama) para obtener la consulta SQL
-        sql_query = self.query_from_llm(user_message)
-
-        if sql_query:
-            try:
-                # Conectar a la base de datos
+        
+        # Extraer la palabra clave de la consulta del usuario
+        keyword = user_message.lower().split("mostrar tablas que contengan")[-1].strip()
+  
+        try:
+                # Establecer la conexión con la base de datos
                 conn = psycopg2.connect(
                     database=self.valves.DB_DATABASE,
                     user=self.valves.DB_USER,
@@ -128,25 +129,33 @@ class Pipeline:
                 conn.autocommit = True
                 cursor = conn.cursor()
 
-                # Ejecutar la consulta SQL generada por Llama
-                cursor.execute(sql_query)
+                # Consultar las tablas de la base de datos
+                cursor.execute("""
+                    SELECT table_schema, table_name
+                    FROM information_schema.tables
+                    WHERE table_type = 'BASE TABLE'
+                    AND table_schema NOT IN ('information_schema', 'pg_catalog')
+                    AND table_name ILIKE %s;
+            """, (f"%{keyword}%",))
 
                 # Obtener los resultados
-                results = cursor.fetchall()
+                tables = cursor.fetchall()
 
-                # Si no hay resultados, devolver mensaje apropiado
-                if not results:
-                    return "No se encontraron resultados."
+                # Si no hay tablas que coincidan con la palabra clave, devolver el mensaje apropiado
+                if not tables:
+                    return f"No hay tablas que contenga la palabra: {keyword}"
 
-                # Formatear los resultados para devolverlos como una cadena
-                result_str = "\n".join([str(result) for result in results])
+                # Crear una lista de tablas
+                table_list = [f"{schema}.{table}" for schema, table in tables]
 
                 # Cerrar la conexión
                 cursor.close()
                 conn.close()
 
-                return result_str
+                # Devolver la lista de tablas como una cadena
+                return str(table_list)
 
-            except Exception as e:
-                logging.error(f"Error al ejecutar la consulta SQL: {e}")
-                return f"Error al ejecutar la consulta SQL: {e}"
+        except Exception as e:
+                logging.error(f"Error al obtener las tablas: {e}")
+                return f"Error al obtener las tablas: {e}"
+
