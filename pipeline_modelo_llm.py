@@ -19,7 +19,7 @@ class Pipeline:
         DB_TABLES: List[str]
 
     def __init__(self):
-        self.name = "Lista Tablas Pipeline"
+        self.name = "Modelo LLM Pipeline"
         self.conn = None
         self.nlsql_response = ""
 
