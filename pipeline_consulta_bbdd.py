@@ -49,29 +49,20 @@ class Pipeline:
     def generate_sql_query(self, user_message: str) -> str:
         
         prompt = """
-            Eres un generador de consultas SQL para PostgreSQL. 
-            Convierte la siguiente solicitud en una consulta SQL válida y segura.
-            No agregues explicaciones, solo devuelve la consulta SQL.
-            Si la solicitud implica buscar tablas, usa la siguiente estructura:
-            
+            Eres un generador de consultas SQL para PostgreSQL.  
+            Convierte la siguiente solicitud en una consulta SQL válida y segura.  
+            No agregues explicaciones, solo devuelve la consulta SQL sin texto adicional.  
+
+            Si la solicitud implica buscar tablas, toma como ejemplo la siguiente estructura:
+
+            ```sql
             SELECT table_schema, table_name
             FROM information_schema.tables
             WHERE table_type = 'BASE TABLE'
             AND table_schema NOT IN ('information_schema', 'pg_catalog')
             AND table_name ILIKE %s;
-            
-
-            Ejemplo:
-            Entrada: 'Buscar tablas relacionadas con usuarios'
-            Salida:
-            
-            SELECT table_schema, table_name
-            FROM information_schema.tables
-            WHERE table_type = 'BASE TABLE'
-            AND table_schema NOT IN ('information_schema', 'pg_catalog')
-            AND table_name ILIKE '%user%';
-            
-            Entrada: '{user_message}'
+                        
+            Entrada: "{user_message}"
             Salida:
         """
         
