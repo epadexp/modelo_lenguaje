@@ -73,7 +73,7 @@ class Pipeline:
             
             return sql_query
         
-        except openai.error.OpenAIError as e:
+        except openai.OpenAIError as e:
             logging.error(f"Error de OpenAI: {e}")
             return "Error: No se pudo generar una consulta SQL válida."
 
