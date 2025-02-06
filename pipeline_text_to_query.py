@@ -35,8 +35,8 @@ class Pipeline:
         )
 
         # Cargar el modelo y el tokenizador de LLaMA
-        self.tokenizer = AutoTokenizer.from_pretrained("huggingface/llama3")  # Reemplaza con el path o nombre del modelo correcto
-        self.model = AutoModelForCausalLM.from_pretrained("huggingface/llama3")  # Reemplaza con el path o nombre del modelo correcto
+        self.tokenizer = AutoTokenizer.from_pretrained("huggingface/meta-llama/Llama-3.1-8B")  # Reemplaza con el path o nombre del modelo correcto
+        self.model = AutoModelForCausalLM.from_pretrained("huggingface/meta-llama/Llama-3.1-8B")  # Reemplaza con el path o nombre del modelo correcto
 
     def generate_sql_query(self, user_message: str) -> str:
         """
