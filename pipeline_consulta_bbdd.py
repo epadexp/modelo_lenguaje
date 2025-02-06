@@ -61,9 +61,7 @@ class Pipeline:
             WHERE table_type = 'BASE TABLE'
             AND table_schema NOT IN ('information_schema', 'pg_catalog')
             AND table_name ILIKE %s;
-                        
-            Entrada: "{user_message}"
-            Salida:
+                    
         """
         
         payload = {
