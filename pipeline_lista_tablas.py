@@ -1,8 +1,10 @@
 import os
 import logging
 import asyncio
-import asyncpg
 import aiohttp
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.future import select
+from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
 from typing import List, Union, Generator, Iterator
 
@@ -33,32 +35,28 @@ class Pipeline:
             }
         )
 
+        self.database_url = (
+            f"postgresql+asyncpg://{self.valves.DB_USER}:{self.valves.DB_PASSWORD}"
+            f"@{self.valves.DB_HOST}:{self.valves.DB_PORT}/{self.valves.DB_DATABASE}"
+        )
+        self.engine = create_async_engine(self.database_url, echo=True)
+        self.SessionLocal = sessionmaker(
+            bind=self.engine, class_=AsyncSession, expire_on_commit=False
+        )
+
     async def init_db_connection(self):
-        try:
-            conn = await asyncpg.connect(
-                user=self.valves.DB_USER,
-                password=self.valves.DB_PASSWORD,
-                database=self.valves.DB_DATABASE,
-                host=self.valves.DB_HOST,
-                port=self.valves.DB_PORT
-            )
-            print("Connection to PostgreSQL established successfully")
-            
+        async with self.SessionLocal() as session:
             query = """
                 SELECT table_schema, table_name
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog');
             """
-            
-            tables = await conn.fetch(query)
+            result = await session.execute(select(query))
+            tables = result.fetchall()
             print("Tables in the database:")
-            for row in tables:
-                print(f"{row['table_schema']}.{row['table_name']}")
-            
-            await conn.close()
-        except Exception as e:
-            print(f"Error connecting to PostgreSQL: {e}")
+            for schema, table in tables:
+                print(f"{schema}.{table}")
 
     async def on_startup(self):
         await self.init_db_connection()
@@ -79,28 +77,18 @@ class Pipeline:
     async def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         keyword = user_message.lower().split("mostrar tablas que contengan")[-1].strip()
 
-        try:
-            conn = await asyncpg.connect(
-                user=self.valves.DB_USER,
-                password=self.valves.DB_PASSWORD,
-                database=self.valves.DB_DATABASE,
-                host=self.valves.DB_HOST,
-                port=self.valves.DB_PORT
-            )
+        async with self.SessionLocal() as session:
             query = """
                 SELECT table_schema, table_name
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE $1;
+                AND table_name ILIKE :keyword;
             """
-            tables = await conn.fetch(query, f"%{keyword}%")
-            await conn.close()
+            result = await session.execute(select(query).params(keyword=f"%{keyword}%"))
+            tables = result.fetchall()
 
             if not tables:
                 return f"No hay tablas que contenga la palabra: {keyword}"
             
-            return str([f"{row['table_schema']}.{row['table_name']}" for row in tables])
-        except Exception as e:
-            logging.error(f"Error al obtener las tablas: {e}")
-            return f"Error al obtener las tablas: {e}"
+            return str([f"{schema}.{table}" for schema, table in tables])
