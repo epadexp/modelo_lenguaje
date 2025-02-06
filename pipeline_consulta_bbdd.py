@@ -48,31 +48,32 @@ class Pipeline:
     
     def generate_sql_query(self, user_message: str) -> str:
         
-        prompt = (
-            "Eres un generador de consultas SQL para PostgreSQL. "
-            "Convierte la siguiente solicitud en una consulta SQL válida y segura. "
-            "No agregues explicaciones, solo devuelve la consulta SQL.\n\n"
-            "Si la solicitud implica buscar tablas, usa la siguiente estructura:\n\n"
-            "\"\"\"\n"
-            "SELECT table_schema, table_name"
-            "FROM information_schema.tables"
-            "WHERE table_type = 'BASE TABLE'"
-            "AND table_schema NOT IN ('information_schema', 'pg_catalog')"
-            "AND table_name ILIKE %s;"
-            "\"\"\"\n\n"
-            "Ejemplo:\n"
-            "Entrada: 'Buscar tablas relacionadas con usuarios'\n"
-            "Salida:\n"
-            "\"\"\"\n"
-            "SELECT table_schema, table_name"
-            "FROM information_schema.tables"
-            "WHERE table_type = 'BASE TABLE'"
-            "AND table_schema NOT IN ('information_schema', 'pg_catalog')\n"
-            "AND table_name ILIKE '%user%';"
-            "\"\"\"\n\n"
-            f"Entrada: '{user_message}'\n"
-            "Salida:"
-        )
+        prompt = """
+            Eres un generador de consultas SQL para PostgreSQL. 
+            Convierte la siguiente solicitud en una consulta SQL válida y segura.
+            No agregues explicaciones, solo devuelve la consulta SQL.
+            Si la solicitud implica buscar tablas, usa la siguiente estructura:
+            
+            SELECT table_schema, table_name
+            FROM information_schema.tables
+            WHERE table_type = 'BASE TABLE'
+            AND table_schema NOT IN ('information_schema', 'pg_catalog')
+            AND table_name ILIKE %s;
+            
+
+            Ejemplo:
+            Entrada: 'Buscar tablas relacionadas con usuarios'
+            Salida:
+            
+            SELECT table_schema, table_name
+            FROM information_schema.tables
+            WHERE table_type = 'BASE TABLE'
+            AND table_schema NOT IN ('information_schema', 'pg_catalog')
+            AND table_name ILIKE '%user%';
+            
+            Entrada: '{user_message}'
+            Salida:
+        """
         
         payload = {
             "model": self.model,
