@@ -34,12 +34,7 @@ class Pipeline:
         )
 
         # Configurar OpenAI API
-        api_key = os.getenv("test")  # Asegúrate de configurar tu clave API
-        if not api_key:
-            print("ERROR: La clave API de OpenAI no está configurada correctamente.")
-        else:
-            print("Clave API cargada correctamente.")
-        openai.api_key = api_key
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
     def generate_sql_query(self, user_message: str) -> str:
         """
@@ -57,30 +52,25 @@ class Pipeline:
         )
 
         try:
-            # Llamada a la API de OpenAI
-            response = openai.Completion.create(
-                model="gpt-3.5-turbo",  # O puedes usar "gpt-4" si tienes acceso
-                prompt=prompt,
-                max_tokens=100,  # Limitar la longitud de la respuesta
-                n=1,
-                stop=None,
-                temperature=0.7
-            )
-            
-            sql_query = response.choices[0].text.strip()
-
-            logging.debug(f"Respuesta del modelo: {sql_query}")
-            
-            # Asegurar que la respuesta sea una consulta SQL válida
-            if not sql_query.lower().startswith("select"):
-                logging.error("El modelo no generó una consulta SQL válida.")
-                return "Error: No se pudo generar una consulta SQL válida."
-            
-            return sql_query
+            # Llamada a la API con la nueva interfaz
+            response = openai.chat_completions.create(
+            model="gpt-3.5-turbo",  # Usa el modelo adecuado
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100,
+            temperature=0.7
+        )
         
+            
+            generated_text = response["choices"][0]["message"]["content"].strip()
+        
+            # Verificación de la consulta SQL generada
+            if not generated_text.lower().startswith("select"):
+                return "Error: No se pudo generar una consulta SQL válida."
+        
+            return generated_text
+     
         except openai.OpenAIError as e:
-            logging.error(f"Error de OpenAI: {e}")
-            return "Error: No se pudo generar una consulta SQL válida."
+            return f"Error de OpenAI: {e}"
 
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
