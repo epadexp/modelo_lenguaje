@@ -34,7 +34,12 @@ class Pipeline:
         )
 
         # Configurar OpenAI API
-        openai.api_key = os.getenv("test")  # Asegúrate de configurar tu clave API
+        api_key = os.getenv("test")  # Asegúrate de configurar tu clave API
+        if not api_key:
+            print("ERROR: La clave API de OpenAI no está configurada correctamente.")
+        else:
+            print("Clave API cargada correctamente.")
+        openai.api_key = api_key
 
     def generate_sql_query(self, user_message: str) -> str:
         """
