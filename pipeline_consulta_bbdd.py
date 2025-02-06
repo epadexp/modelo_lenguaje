@@ -47,11 +47,30 @@ class Pipeline:
 
     
     def generate_sql_query(self, user_message: str) -> str:
+        
         prompt = (
             "Eres un generador de consultas SQL para PostgreSQL. "
             "Convierte la siguiente solicitud en una consulta SQL válida y segura. "
-            "No agregues explicaciones, solo devuelve la consulta SQL.\n\n"
-            f"Entrada: '{user_message}'\nSalida:"
+            "Si la solicitud implica buscar tablas, usa la siguiente estructura:\n\n"
+            "\"\"\"\n"
+            "SELECT table_schema, table_name\n"
+            "FROM information_schema.tables\n"
+            "WHERE table_type = 'BASE TABLE'\n"
+            "AND table_schema NOT IN ('information_schema', 'pg_catalog')\n"
+            "AND table_name ILIKE %s;\n"
+            "\"\"\"\n\n"
+            "Ejemplo:\n"
+            "Entrada: 'Buscar tablas relacionadas con usuarios'\n"
+            "Salida:\n"
+            "\"\"\"\n"
+            "SELECT table_schema, table_name\n"
+            "FROM information_schema.tables\n"
+            "WHERE table_type = 'BASE TABLE'\n"
+            "AND table_schema NOT IN ('information_schema', 'pg_catalog')\n"
+            "AND table_name ILIKE '%user%';\n"
+            "\"\"\"\n\n"
+            f"Entrada: '{user_message}'\n"
+            "Salida:"
         )
         
         payload = {
