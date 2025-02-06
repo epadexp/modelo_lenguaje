@@ -5,7 +5,7 @@ from typing import List, Union, Generator, Iterator
 
 class Pipeline:
     def __init__(self):
-        self.url = "http://127.0.0.1:11434/v1/chat/completions"
+        self.url = "http://host.docker.internal:11434/v1/chat/completions"
         self.headers = {
             "Content-Type": "application/json"
         }
