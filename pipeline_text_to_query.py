@@ -1,7 +1,7 @@
 import os
 import logging
 import psycopg2
-import ollama  # Para usar el modelo de lenguaje LLaMA con Ollama
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from pydantic import BaseModel
 from typing import List, Union, Generator, Iterator
@@ -18,7 +18,7 @@ class Pipeline:
         DB_TABLES: List[str]
 
     def __init__(self):
-        self.name = "Basic Pipeline"
+        self.name = "Text to SQL"
         self.conn = None
         self.nlsql_response = ""
 
@@ -33,10 +33,14 @@ class Pipeline:
                 "DB_TABLES": ["XXXXX"],
             }
         )
-    
+
+        # Cargar el modelo y el tokenizador de LLaMA
+        self.tokenizer = AutoTokenizer.from_pretrained("huggingface/llama3")  # Reemplaza con el path o nombre del modelo correcto
+        self.model = AutoModelForCausalLM.from_pretrained("huggingface/llama3")  # Reemplaza con el path o nombre del modelo correcto
+
     def generate_sql_query(self, user_message: str) -> str:
         """
-        Usa el modelo de lenguaje para convertir un mensaje en lenguaje natural en una consulta SQL bien estructurada.
+        Usa LLaMA para convertir un mensaje en lenguaje natural en una consulta SQL válida.
         """
         prompt = (
             "Eres un generador de consultas SQL para PostgreSQL. "
@@ -48,10 +52,16 @@ class Pipeline:
             "Entrada: '" + user_message + "'\n"
             "Salida:"
         )
-        
-        response = ollama.chat(model='llama3', messages=[{"role": "user", "content": prompt}])
-        sql_query = response["message"]["content"].strip()
-        
+
+        # Tokenizar el prompt
+        inputs = self.tokenizer(prompt, return_tensors="pt")
+
+        # Generar la respuesta con el modelo LLaMA
+        outputs = self.model.generate(**inputs, max_length=512)
+
+        # Decodificar la respuesta generada
+        sql_query = self.tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+
         # Asegurar que la respuesta sea una consulta SQL válida
         if not sql_query.lower().startswith("select"):
             logging.error("El modelo no generó una consulta SQL válida.")
@@ -61,14 +71,25 @@ class Pipeline:
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         """Toma un mensaje de usuario y lo convierte en una consulta SQL."""
-        try:
+        
+        try: 
+            conn = psycopg2.connect(
+                database=self.valves.DB_DATABASE,
+                user=self.valves.DB_USER,
+                password=self.valves.DB_PASSWORD,
+                host=self.valves.DB_HOST.split('//')[-1],
+                port=self.valves.DB_PORT
+                )
+
             # Generar la consulta SQL
             sql_query = self.generate_sql_query(user_message)
             print(f"Consulta generada: {sql_query}")
             
             # Devolver solo la consulta SQL sin ejecutarla
             return sql_query
+        
         except Exception as e:
             logging.error(f"Error processing request: {e}")
             return f"Error: {e}"
+
 
