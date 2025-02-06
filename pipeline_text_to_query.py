@@ -38,7 +38,7 @@ class Pipeline:
         prompt = self.valves.AGENT_SYSTEM_PROMPT.format(user_message=user_message)
         
         try:
-            response = openai.chat.Completion.create(
+            response = openai.chat.completion.create(
                 model=self.valves.OPENAI_API_MODEL,
                 messages=[{"role": "system", "content": prompt}],
                 max_tokens=150,
