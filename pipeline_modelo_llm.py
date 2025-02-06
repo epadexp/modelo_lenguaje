@@ -12,6 +12,7 @@ class Pipeline:
         self.model = "llama3"  # Modelo que estás usando, cambia según corresponda
 
     def generate_sql_query(self, user_message: str) -> str:
+        
         prompt = (
             "Eres un generador de consultas SQL para PostgreSQL. "
             "Convierte la siguiente solicitud en una consulta SQL válida y segura. "
@@ -56,11 +57,6 @@ class Pipeline:
             logging.error(f"Error processing request: {e}")
             return f"Error: {e}"
 
-# Prueba con un mensaje de usuario
-# pipeline = Pipeline()
-# user_message = "Mostrar todos los registros de la tabla embeddings"
-# sql_query = pipeline.generate_sql_query(user_message)
-# print("Consulta SQL generada:", sql_query)
 
 
 
