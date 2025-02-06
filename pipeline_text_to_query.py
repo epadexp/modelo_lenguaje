@@ -43,7 +43,7 @@ class Pipeline:
         prompt = (
             "Eres un generador de consultas SQL para PostgreSQL. "
             "Convierte la siguiente solicitud en una consulta SQL válida y segura. "
-            "No agregues explicaciones, solo devuelve la consulta SQL.\n\n"
+            "Por favor, genera SOLO una consulta SQL válida, sin ninguna explicación. "
             "Ejemplo:\n"
             "Entrada: 'Mostrar todos los usuarios activos'\n"
             "Salida: SELECT * FROM users WHERE status = 'active';\n\n"
@@ -63,6 +63,8 @@ class Pipeline:
             )
             
             sql_query = response.choices[0].text.strip()
+
+            logging.debug(f"Respuesta del modelo: {sql_query}")
             
             # Asegurar que la respuesta sea una consulta SQL válida
             if not sql_query.lower().startswith("select"):
@@ -71,9 +73,10 @@ class Pipeline:
             
             return sql_query
         
-        except Exception as e:
-            logging.error(f"Error al interactuar con OpenAI: {e}")
+        except openai.error.OpenAIError as e:
+            logging.error(f"Error de OpenAI: {e}")
             return "Error: No se pudo generar una consulta SQL válida."
+
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         """Toma un mensaje de usuario y lo convierte en una consulta SQL."""
