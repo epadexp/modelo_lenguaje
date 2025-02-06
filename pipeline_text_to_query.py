@@ -11,7 +11,7 @@ class Pipeline:
     class Valves(BaseModel):
         OPENAI_API_BASE_URL: str = "https://api.openai.com/v1"
         OPENAI_API_KEY: str = ""
-        OPENAI_API_MODEL: str = "gpt-4o"
+        OPENAI_API_MODEL: str = "gpt-4"
         OPENAI_API_TEMPERATURE: float = 0.7
         AGENT_SYSTEM_PROMPT: str = (
             "Eres un generador de consultas SQL para PostgreSQL. "
@@ -38,9 +38,9 @@ class Pipeline:
         prompt = self.valves.AGENT_SYSTEM_PROMPT.format(user_message=user_message)
         
         try:
-            response = openai.Completion.create(
+            response = openai.chat.Completion.create(
                 model=self.valves.OPENAI_API_MODEL,
-                prompt=prompt,
+                messages=[{"role": "system", "content": prompt}],
                 max_tokens=150,
                 temperature=self.valves.OPENAI_API_TEMPERATURE,
             )
