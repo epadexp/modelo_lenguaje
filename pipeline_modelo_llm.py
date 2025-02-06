@@ -56,15 +56,15 @@ class Pipeline:
             logging.error(f"Error generating SQL query: {e}")
             return f"Error generating SQL query: {e}"
 
-def pipe(self, user_message: str, messages: List[dict], body: dict, model_id: str = None) -> Union[str, Generator, Iterator]:
-        
-        try:
-            sql_query = self.generate_sql_query(user_message)
-        
-            return sql_query
-        except Exception as e:
-            logging.error(f"Error processing request: {e}")
-            return f"Error: {e}"
+    def pipe(self, user_message: str, messages: List[dict], body: dict, model_id: str = None) -> Union[str, Generator, Iterator]:
+            
+            try:
+                sql_query = self.generate_sql_query(user_message)
+            
+                return sql_query
+            except Exception as e:
+                logging.error(f"Error processing request: {e}")
+                return f"Error: {e}"
 
 
 
