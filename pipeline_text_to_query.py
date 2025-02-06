@@ -53,7 +53,7 @@ class Pipeline:
 
         try:
             # Llamada a la API con la nueva interfaz
-            response = openai.chat_completions.create(
+            response = openai.chat.completions.create(
             model="gpt-3.5-turbo",  # Usa el modelo adecuado
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100,
