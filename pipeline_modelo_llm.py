@@ -5,7 +5,7 @@ from typing import List, Union, Generator, Iterator
 
 class Pipeline:
     def __init__(self):
-        self.url = "http://localhost:11434/v1/chat/completions"
+        self.url = "http://127.0.0.1:11434/v1/chat/completions"
         self.headers = {
             "Content-Type": "application/json"
         }
@@ -56,9 +56,9 @@ class Pipeline:
             logging.error(f"Error processing request: {e}")
             return f"Error: {e}"
 
-# # Prueba con un mensaje de usuario
+# Prueba con un mensaje de usuario
 # pipeline = Pipeline()
-# user_message = "Mostrar todos los usuarios activos"
+# user_message = "Mostrar todos los registros de la tabla embeddings"
 # sql_query = pipeline.generate_sql_query(user_message)
 # print("Consulta SQL generada:", sql_query)
 
