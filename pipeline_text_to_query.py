@@ -36,11 +36,28 @@ class Pipeline:
     
     def generate_sql_query(self, user_message: str) -> str:
         """
-        Usa el modelo de lenguaje para convertir un mensaje en lenguaje natural en una consulta SQL.
+        Usa el modelo de lenguaje para convertir un mensaje en lenguaje natural en una consulta SQL bien estructurada.
         """
-        prompt = f"Convierte el siguiente mensaje en una consulta SQL para PostgreSQL:\n\nMensaje: '{user_message}'\n\nConsulta SQL:"
+        prompt = (
+            "Eres un generador de consultas SQL para PostgreSQL. "
+            "Convierte la siguiente solicitud en una consulta SQL válida y segura. "
+            "No agregues explicaciones, solo devuelve la consulta SQL.\n\n"
+            "Ejemplo:\n"
+            "Entrada: 'Mostrar todos los usuarios activos'\n"
+            "Salida: SELECT * FROM users WHERE status = 'active';\n\n"
+            "Entrada: '" + user_message + "'\n"
+            "Salida:"
+        )
+        
         response = ollama.chat(model='llama3', messages=[{"role": "user", "content": prompt}])
-        return response["message"]["content"].strip()
+        sql_query = response["message"]["content"].strip()
+        
+        # Asegurar que la respuesta sea una consulta SQL válida
+        if not sql_query.lower().startswith("select"):
+            logging.error("El modelo no generó una consulta SQL válida.")
+            return "Error: No se pudo generar una consulta SQL válida."
+        
+        return sql_query
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         """Toma un mensaje de usuario y lo convierte en una consulta SQL."""
@@ -54,3 +71,4 @@ class Pipeline:
         except Exception as e:
             logging.error(f"Error processing request: {e}")
             return f"Error: {e}"
+
