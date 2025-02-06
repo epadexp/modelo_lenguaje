@@ -25,7 +25,7 @@ class Pipeline:
         )
 
     def __init__(self):
-        self.name = "Chat with YouTube"
+        self.name = "Text to SQL"
         self.tools = None
         self.valves = self.Valves(
             OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", "")
@@ -50,7 +50,7 @@ class Pipeline:
             logging.error(f"Error generating SQL query: {e}")
             return "Error generating SQL query."
         
-    def pipe(self, user_message: str) -> Union[str, Generator, Iterator]:
+    def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         
         try:
             sql_query = self.generate_sql_query(user_message)
