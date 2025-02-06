@@ -34,7 +34,7 @@ class Pipeline:
         )
 
         # Configurar OpenAI API
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    openai.api_key = os.getenv("test")
 
     def generate_sql_query(self, user_message: str) -> str:
         """
