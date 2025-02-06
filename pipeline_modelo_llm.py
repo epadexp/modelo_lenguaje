@@ -1,70 +1,68 @@
-import os
+import requests
 import logging
-import ollama
-from pydantic import BaseModel
 from typing import List, Union, Generator, Iterator
 
-logging.basicConfig(level=logging.DEBUG)
 
 class Pipeline:
-    class Valves(BaseModel):
-        OPENAI_API_BASE_URL: str = "http://localhost:11434"
-        OPENAI_API_KEY: str = ""  # Asegúrate de que esta clave esté configurada correctamente
-        OPENAI_API_MODEL: str = "llama3"
-        OPENAI_API_TEMPERATURE: float = 0.7
-        AGENT_SYSTEM_PROMPT: str = (
+    def __init__(self):
+        self.url = "http://localhost:11434/v1/chat/completions"
+        self.headers = {
+            "Content-Type": "application/json"
+        }
+        self.model = "llama3"  # Modelo que estás usando, cambia según corresponda
+
+    def generate_sql_query(self, user_message: str) -> str:
+        prompt = (
             "Eres un generador de consultas SQL para PostgreSQL. "
             "Convierte la siguiente solicitud en una consulta SQL válida y segura. "
             "No agregues explicaciones, solo devuelve la consulta SQL.\n\n"
-            "Ejemplo:\n"
-            "Entrada: 'Mostrar todos los usuarios activos'\n"
-            "Salida: SELECT * FROM users WHERE status = 'active';\n\n"
-            "Entrada: '{user_message}'\n"
-            "Salida:"
+            f"Entrada: '{user_message}'\nSalida:"
         )
-
-    def __init__(self):
-        self.name = "Chat with YouTube"
-        self.tools = None
-        self.valves = self.Valves(
-            OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", "")
-        )
-
-    def generate_sql_query(self, user_message: str) -> str:
-        prompt = self.valves.AGENT_SYSTEM_PROMPT.format(user_message=user_message)
+        
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "system", "content": prompt}],
+            "temperature": 0.7
+        }
         
         try:
-            response = ollama.chat(  # Uso de Ollama para obtener la respuesta
-                model=self.valves.OPENAI_API_MODEL,
-                messages=[{"role": "system", "content": prompt}]
-            )
-
-            # Imprimir la respuesta completa para depuración
-            logging.debug(f"Respuesta completa: {response}")
-
-            # Aquí es donde debes verificar cómo acceder correctamente a la respuesta
-            if 'text' in response:
-                sql_query = response['text'].strip()
+            response = requests.post(self.url, headers=self.headers, json=payload)
+            response.raise_for_status()  # Esto lanzará una excepción si la respuesta no es 2xx
+            
+            # Obtener los datos de la respuesta
+            response_data = response.json()
+            print("Respuesta completa:", response_data)
+            
+            # Acceder al contenido de la respuesta
+            if 'choices' in response_data and len(response_data['choices']) > 0:
+                sql_query = response_data['choices'][0]['message']['content'].strip()
                 return sql_query
             else:
-                # Si no hay 'text', imprimir toda la respuesta para ver qué campos tiene
-                logging.error("La respuesta no contiene el campo 'text'. Respuesta completa:")
-                logging.error(response)
-                return "Error: La respuesta no contiene 'text'."
+                logging.error("La respuesta no contiene contenido válido.")
+                return "Error: La respuesta no contiene contenido válido."
 
-        except Exception as e:
-            logging.error(f"Error generating SQL query: {e}")
-            return f"Error generating SQL query: {e}"
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error al realizar la solicitud a la API de Ollama: {e}")
+            return "Error al generar la consulta SQL."
+        
 
     def pipe(self, user_message: str, messages: List[dict], body: dict, model_id: str = None) -> Union[str, Generator, Iterator]:
-            
-            try:
-                sql_query = self.generate_sql_query(user_message)
-            
-                return sql_query
-            except Exception as e:
-                logging.error(f"Error processing request: {e}")
-                return f"Error: {e}"
+        
+        try:
+            sql_query = self.generate_sql_query(user_message)
+        
+            return sql_query
+        except Exception as e:
+            logging.error(f"Error processing request: {e}")
+            return f"Error: {e}"
+
+# # Prueba con un mensaje de usuario
+# pipeline = Pipeline()
+# user_message = "Mostrar todos los usuarios activos"
+# sql_query = pipeline.generate_sql_query(user_message)
+# print("Consulta SQL generada:", sql_query)
+
+
 
 
 
