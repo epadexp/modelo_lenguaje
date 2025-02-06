@@ -1,16 +1,19 @@
 import os
 import logging
-import asyncio
+import psycopg2 # Biblioteca popular para interacturar con bases de datos PostgreSQL
 import aiohttp
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.future import select
-from sqlalchemy.orm import sessionmaker
+import asyncio
+
+
 from pydantic import BaseModel
 from typing import List, Union, Generator, Iterator
+
+
 
 logging.basicConfig(level=logging.DEBUG)
 
 class Pipeline:
+
     class Valves(BaseModel):
         DB_HOST: str
         DB_PORT: str
@@ -21,12 +24,13 @@ class Pipeline:
 
     def __init__(self):
         self.name = "Lista Tablas Pipeline"
+        self.conn = None
         self.nlsql_response = ""
 
         self.valves = self.Valves(
             **{
                 "pipelines": ["*"],
-                "DB_HOST": os.getenv("PG_HOST", "XX.XX.XXX.XXX"),
+                "DB_HOST": os.getenv("PG_HOST", "http://XX.XX.XXX.XXX"),
                 "DB_PORT": os.getenv("PG_PORT", 'XXXX'),
                 "DB_USER": os.getenv("PG_USER", "admin"),
                 "DB_PASSWORD": os.getenv("PG_PASSWORD", "XXXXX"),
@@ -35,31 +39,44 @@ class Pipeline:
             }
         )
 
-        self.database_url = (
-            f"postgresql+asyncpg://{self.valves.DB_USER}:{self.valves.DB_PASSWORD}"
-            f"@{self.valves.DB_HOST}:{self.valves.DB_PORT}/{self.valves.DB_DATABASE}"
-        )
-        self.engine = create_async_engine(self.database_url, echo=True)
-        self.SessionLocal = sessionmaker(
-            bind=self.engine, class_=AsyncSession, expire_on_commit=False
-        )
+    def init_db_connection(self):
+        connection_params = {
+            'dbname': self.valves.DB_DATABASE,
+            'user': self.valves.DB_USER,
+            'password': self.valves.DB_PASSWORD,
+            'host': self.valves.DB_HOST.split('//')[-1],  # Remove the http:// or https:// prefix if present
+            'port': self.valves.DB_PORT
+        }
 
-    async def init_db_connection(self):
-        async with self.SessionLocal() as session:
-            query = """
-                SELECT table_schema, table_name
-                FROM information_schema.tables
-                WHERE table_type = 'BASE TABLE'
-                AND table_schema NOT IN ('information_schema', 'pg_catalog');
-            """
-            result = await session.execute(select(query))
-            tables = result.fetchall()
-            print("Tables in the database:")
-            for schema, table in tables:
-                print(f"{schema}.{table}")
+        try:
+            self.conn = psycopg2.connect(**connection_params)
+            print("Connection to PostgreSQL established successfully")
+        except Exception as e:
+            print(f"Error connecting to PostgreSQL: {e}")
+
+        # Create a cursor object
+        self.cur = self.conn.cursor()
+
+        # Query to get the list of tables
+        self.cur.execute("""
+            SELECT table_schema, table_name
+            FROM information_schema.tables
+            WHERE table_type = 'BASE TABLE'
+            AND table_schema NOT IN ('information_schema', 'pg_catalog');
+        """)
+
+        # Fetch and print the table names
+        tables = self.cur.fetchall()
+        print("Tables in the database:")
+        for schema, table in tables:
+            print(f"{schema}.{table}")
 
     async def on_startup(self):
-        await self.init_db_connection()
+        self.init_db_connection()
+
+    async def on_shutdown(self):
+        self.cur.close()
+        self.conn.close()
 
     async def make_request_with_retry(self, url, params, retries=3, timeout=10):
         for attempt in range(retries):
@@ -72,23 +89,51 @@ class Pipeline:
                 logging.error(f"Attempt {attempt + 1} failed with error: {e}")
                 if attempt + 1 == retries:
                     raise
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(2 ** attempt)  # Exponential backoff
 
-    async def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
+    def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
+        
+        # Extraer la palabra clave de la consulta del usuario
         keyword = user_message.lower().split("mostrar tablas que contengan")[-1].strip()
+  
+        try:
+                # Establecer la conexión con la base de datos
+                conn = psycopg2.connect(
+                    database=self.valves.DB_DATABASE,
+                    user=self.valves.DB_USER,
+                    password=self.valves.DB_PASSWORD,
+                    host=self.valves.DB_HOST.split('//')[-1],
+                    port=self.valves.DB_PORT
+                )
+                conn.autocommit = True
+                cursor = conn.cursor()
 
-        async with self.SessionLocal() as session:
-            query = """
-                SELECT table_schema, table_name
-                FROM information_schema.tables
-                WHERE table_type = 'BASE TABLE'
-                AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE :keyword;
-            """
-            result = await session.execute(select(query).params(keyword=f"%{keyword}%"))
-            tables = result.fetchall()
+                # Consultar las tablas de la base de datos
+                cursor.execute("""
+                    SELECT table_schema, table_name
+                    FROM information_schema.tables
+                    WHERE table_type = 'BASE TABLE'
+                    AND table_schema NOT IN ('information_schema', 'pg_catalog')
+                    AND table_name ILIKE %s;
+            """, (f"%{keyword}%",))
 
-            if not tables:
-                return f"No hay tablas que contenga la palabra: {keyword}"
-            
-            return str([f"{schema}.{table}" for schema, table in tables])
+                # Obtener los resultados
+                tables = cursor.fetchall()
+
+                # Si no hay tablas que coincidan con la palabra clave, devolver el mensaje apropiado
+                if not tables:
+                    return f"No hay tablas que contenga la palabra: {keyword}"
+
+                # Crear una lista de tablas
+                table_list = [f"{schema}.{table}" for schema, table in tables]
+
+                # Cerrar la conexión
+                cursor.close()
+                conn.close()
+
+                # Devolver la lista de tablas como una cadena
+                return str(table_list)
+
+        except Exception as e:
+                logging.error(f"Error al obtener las tablas: {e}")
+                return f"Error al obtener las tablas: {e}"
