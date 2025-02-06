@@ -51,6 +51,7 @@ class Pipeline:
         prompt = (
             "Eres un generador de consultas SQL para PostgreSQL. "
             "Convierte la siguiente solicitud en una consulta SQL válida y segura. "
+            "No agregues explicaciones, solo devuelve la consulta SQL.\n\n"
             "Si la solicitud implica buscar tablas, usa la siguiente estructura:\n\n"
             "\"\"\"\n"
             "SELECT table_schema, table_name\n"
