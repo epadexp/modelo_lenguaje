@@ -48,7 +48,7 @@ class Pipeline:
     
     def generate_sql_query(self, user_message: str) -> str:
         
-        prompt = f"""
+        prompt = (f"""
                 Tu tarea es generar una consulta SQL para PostgreSQL. La consulta debe buscar tablas cuyo nombre contenga una palabra clave proporcionada por el usuario.
 
                 **Reglas:**
@@ -89,10 +89,10 @@ class Pipeline:
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
                 AND table_name ILIKE '%parados%';
 
-                Entrada:'{user_message}'
+                Entrada:"{user_message}"
                 Salida:
 
-            """
+            """)
 
 
         
