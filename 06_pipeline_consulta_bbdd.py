@@ -53,47 +53,47 @@ class Pipeline:
 
             # Obtener todas las tablas
             cursor.execute("""
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_type = 'BASE TABLE'
-                AND table_schema NOT IN ('information_schema', 'pg_catalog');
+                SELECT table_name, column_name
+                FROM information_schema.columns
+                WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
+                ORDER BY table_name, ordinal_position;
             """)
-            tables = [row[0] for row in cursor.fetchall()]
-
-            for table in tables:
-                # Obtener columnas de cada tabla
-                cursor.execute(f"""
-                    SELECT column_name, data_type
-                    FROM information_schema.columns
-                    WHERE table_name = '{table}';
-                """)
-                schema_info[table] = [{"column": row[0], "type": row[1]} for row in cursor.fetchall()]
+                # Organizar los datos en un diccionario {tabla: [columnas]}
+            schema = {}
+            for table, column in cursor.fetchall():
+                if table not in schema:
+                    schema[table] = []
+                schema[table].append(column)
 
             cursor.close()
             conn.close()
-        except Exception as e:
+
+            return schema
+
+        except psycopg2.Error as e:
             logging.error(f"Error al obtener la estructura de la base de datos: {e}")
             return {}
-
-        return schema_info
 
     def generate_sql_query(self, user_message: str) -> str:
         """Genera una consulta SQL basada en una pregunta en lenguaje natural."""
         
         # Obtener la estructura de la base de datos
         db_schema = self.get_db_schema()
-        
+
+        if not db_schema:
+            return "Error: No se pudo obtener la estructura de la base de datos."
+
         prompt = f"""
-        Eres un asistente experto en bases de datos PostgreSQL. Tu tarea es generar únicamente consultas SQL válidas 
-        en base a la pregunta del usuario. La base de datos tiene las siguientes tablas y columnas:
+        Eres un asistente experto en bases de datos PostgreSQL. Tu tarea es generar una consulta SQL válida
+        usando exclusivamente las siguientes tablas y columnas disponibles en la base de datos:
 
         {json.dumps(db_schema, indent=2)}
 
         **Reglas:**
         1. Devuelve solo la consulta SQL sin explicaciones adicionales ni comentarios.
-        2. La consulta debe ser válida en PostgreSQL y no debe contener errores de sintaxis.
-        3. Usa `JOIN` cuando sea necesario si la información se encuentra en múltiples tablas.
-        4. No uses nombres de tablas o columnas que no existan en la estructura proporcionada.
+        2. La consulta debe ser válida en PostgreSQL y solo puede usar tablas y columnas listadas arriba.
+        3. Usa `JOIN` si la información se encuentra en múltiples tablas.
+        4. No inventes nombres de tablas o columnas. Usa solo las que existen.
         5. No devuelvas texto descriptivo, solo la consulta SQL.
 
         **Ejemplos de entrada y salida:**
@@ -139,6 +139,7 @@ class Pipeline:
         except requests.exceptions.RequestException as e:
             logging.error(f"Error al realizar la solicitud a la API de Ollama: {e}")
             return "Error al generar la consulta SQL."
+
 
 
     def generate_natural_language_response(self, query_result: list) -> str:
@@ -208,17 +209,27 @@ class Pipeline:
 
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
-        """Orquesta la generación y ejecución de la consulta SQL."""
         try:
             sql_query = self.generate_sql_query(user_message)
-            if "Error" in sql_query:
+
+            # Validar que se generó una consulta SQL válida
+            if sql_query.startswith("Error"):
                 return sql_query
 
-            query_results = self.execute_query(sql_query)
-            natural_response = self.generate_natural_language_response(query_results)
-            return natural_response
+            # Ejecutar la consulta en PostgreSQL
+            results = self.execute_query(sql_query)
+
+            # Si no hay resultados, devolver un mensaje apropiado
+            if not results:
+                return "No hay resultados para tu consulta."
+
+            # Convertir los resultados en una respuesta en lenguaje natural
+            respuesta = self.generate_natural_language_response(results)
+
+            return respuesta
 
         except Exception as e:
-            logging.error(f"Error en el proceso de consulta: {e}")
+            logging.error(f"Error en el proceso: {e}")
             return f"Error en el proceso: {e}"
+
 
