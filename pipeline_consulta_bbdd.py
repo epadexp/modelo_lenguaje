@@ -53,11 +53,10 @@ class Pipeline:
 
                 **Reglas:**
                 1. La consulta debe ser válida y segura, usando `ILIKE` para realizar una búsqueda flexible.
-                2. Usa `ILIKE %s` para la búsqueda en lugar de colocar la palabra clave directamente en la consulta.
-                3. No añadas explicaciones ni texto adicional.
-                4. La consulta debe buscar el nombre de las tablas en la base de datos, filtrando solo por tablas que contengan la palabra clave dada.
-                5. No repitas ni reescribas la solicitud del usuario; solo devuelve la consulta SQL correcta.
-                6. No agregues explicaciones ni ```sql, solo devuelve la consulta.
+                2. No añadas explicaciones ni texto adicional.
+                3. La consulta debe buscar el nombre de las tablas en la base de datos, filtrando solo por tablas que contengan la palabra clave dada.
+                4. No repitas ni reescribas la solicitud del usuario; solo devuelve la consulta SQL correcta.
+                5. No agregues explicaciones ni ```sql, solo devuelve la consulta.
 
                 **Ejemplo:**
                 Entrada: "Busca las tablas relacionadas con nacimientos"
