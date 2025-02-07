@@ -57,6 +57,7 @@ class Pipeline:
                 3. No añadas explicaciones ni texto adicional.
                 4. La consulta debe buscar el nombre de las tablas en la base de datos, filtrando solo por tablas que contengan la palabra clave dada.
                 5. No repitas ni reescribas la solicitud del usuario; solo devuelve la consulta SQL correcta.
+                6. No agregues explicaciones ni ```sql, solo devuelve la consulta.
 
                 **Ejemplo:**
                 Entrada: "Busca las tablas relacionadas con nacimientos"
@@ -66,7 +67,29 @@ class Pipeline:
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE %s;
+                AND table_name ILIKE 'nacimientos';
+
+                **Ejemplo:**
+                Entrada: "Quiero las tablas relacionadas con platanos"
+                Salida:
+                ```sql
+                SELECT table_schema, table_name
+                FROM information_schema.tables
+                WHERE table_type = 'BASE TABLE'
+                AND table_schema NOT IN ('information_schema', 'pg_catalog')
+                AND table_name ILIKE 'platanos';
+
+                **Ejemplo:**
+                Entrada: "Las tablas sobre parados"
+                Salida:
+                ```sql
+                SELECT table_schema, table_name
+                FROM information_schema.tables
+                WHERE table_type = 'BASE TABLE'
+                AND table_schema NOT IN ('information_schema', 'pg_catalog')
+                AND table_name ILIKE 'parados';
+
+
 
             """
 
