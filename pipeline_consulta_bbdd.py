@@ -88,16 +88,6 @@ class Pipeline:
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
                 AND table_name ILIKE '%parados%';
-                  
-                **Ejemplo:**
-                Entrada: "¿Cuántas tablas hay sobre ocupados?"
-                Salida:
-                ```sql 
-                SELECT COUNT(*) AS table_count, array_agg(table_name) AS tables
-                FROM information_schema.tables
-                WHERE table_type = 'BASE TABLE'
-                AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE '%ocupados%';
 
                 Entrada:"{user_message}"
                 Salida:
@@ -213,13 +203,12 @@ class Pipeline:
                 cursor.execute(sql_query)
                 
                 # Obtener los resultados
-                tables_count, tables= cursor.fetchone()
+                tables= cursor.fetchall()
 
                 # Si no hay tablas que coincidan con la palabra clave, devolver el mensaje apropiado
                 if not tables:
                     return f"No hay tablas para lo que pides"
                 
-                tables_num = f"Hay {tables_count} tablas: "
 
                 # Crear una lista de tablas
                 table_list = [f"{schema}.{table}" for schema, table in tables]
@@ -229,7 +218,7 @@ class Pipeline:
                 conn.close()
 
                 # Devolver la lista de tablas como una cadena
-                return tables_num + str(table_list)
+                return str(table_list)
 
         except Exception as e:
                 logging.error(f"Error al obtener las tablas: {e}")
