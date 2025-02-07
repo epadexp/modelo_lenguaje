@@ -159,6 +159,7 @@ class Pipeline:
         1. Si la consulta no devuelve resultados, responde "No se encontraron datos".
         2. Si hay resultados, resume la información en una respuesta clara y concisa.
         3. La respuesta debe estar en español.
+        4. **Debes listar las tablas en las que te basas para constestar**
         
         **Salida esperada:**
         """
