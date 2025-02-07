@@ -49,25 +49,27 @@ class Pipeline:
     def generate_sql_query(self, user_message: str) -> str:
         
         prompt = """
-                Eres un generador de consultas SQL experto en PostgreSQL.  
-                Tu tarea es extraer la palabra clave de la solicitud en lenguaje natural y generar una consulta SQL válida para buscar tablas que contengan esa palabra en su nombre.  
+                Tu tarea es generar una consulta SQL para PostgreSQL. La consulta debe buscar tablas cuyo nombre contenga una palabra clave proporcionada por el usuario.
 
-                Reglas:  
-                1. Extrae la palabra clave de la solicitud.  
-                2. Inserta directamente la palabra clave en la consulta usando `ILIKE '%palabra%'`.  
-                3. No uses variables como `{term}`. Usa el valor real.  
-                4. No agregues explicaciones ni ```sql, solo devuelve la consulta.
+                **Reglas:**
+                1. La consulta debe ser válida y segura, usando `ILIKE` para realizar una búsqueda flexible.
+                2. Usa `ILIKE %s` para la búsqueda en lugar de colocar la palabra clave directamente en la consulta.
+                3. No añadas explicaciones ni texto adicional.
+                4. La consulta debe buscar el nombre de las tablas en la base de datos, filtrando solo por tablas que contengan la palabra clave dada.
+                5. No repitas ni reescribas la solicitud del usuario; solo devuelve la consulta SQL correcta.
 
-                Ejemplo:
+                **Ejemplo:**
                 Entrada: "Busca las tablas relacionadas con nacimientos"
-                Salida esperada:
+                Salida:
+                ```sql
                 SELECT table_schema, table_name
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE '%nacimientos%';
+                AND table_name ILIKE %s;
 
             """
+
 
         
         payload = {
