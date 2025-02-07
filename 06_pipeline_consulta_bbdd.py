@@ -97,7 +97,7 @@ class Pipeline:
         5. No devuelvas texto descriptivo, solo la consulta SQL.
         6. Si el usuario especifica ine, tienes que buscar entre las tablas que empiezan por ine
         7. Si el usuario especifica istac, tienes que buscar entre las tablas que empiezan por istac
-        8. Si el usuario especifica un año, tienes que buscar en la columna anios
+        8. Si el usuario especifica un año, tienes que buscar en la columna periodo
 
         **Ejemplos de entrada y salida:**
 
