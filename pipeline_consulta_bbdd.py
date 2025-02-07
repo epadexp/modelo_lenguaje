@@ -57,7 +57,7 @@ class Pipeline:
                 3. La consulta debe buscar el nombre de las tablas en la base de datos, filtrando solo por tablas que contengan la palabra clave dada.
                 4. No repitas ni reescribas la solicitud del usuario; solo devuelve la consulta SQL correcta.
                 5. No agregues explicaciones ni ```sql, solo devuelve la consulta.
-                6. **Debes reemplazar %s por la palabra clave directamente en la consulta, no dejes el parámetro %s en la consulta.**
+                6. **Debes reemplazar la s en el ILIKE por la palabra clave directamente en la consulta, no dejes el parámetro s en la consulta.**
 
                 **Ejemplo:**
                 Entrada: "Busca las tablas relacionadas con nacimientos"
