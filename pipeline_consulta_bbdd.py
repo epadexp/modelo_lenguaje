@@ -57,6 +57,7 @@ class Pipeline:
                 3. La consulta debe buscar el nombre de las tablas en la base de datos, filtrando solo por tablas que contengan la palabra clave dada.
                 4. No repitas ni reescribas la solicitud del usuario; solo devuelve la consulta SQL correcta.
                 5. No agregues explicaciones ni ```sql, solo devuelve la consulta.
+                6. Cambia el termino %s por la palabra clave.
 
                 **Ejemplo:**
                 Entrada: "Busca las tablas relacionadas con nacimientos"
