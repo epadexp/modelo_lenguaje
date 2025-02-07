@@ -84,27 +84,38 @@ class Pipeline:
         db_schema = self.get_db_schema()
         
         prompt = f"""
-        Eres un asistente experto en bases de datos PostgreSQL. Tu tarea es generar una consulta SQL 
-        válida en base a una pregunta en lenguaje natural. La base de datos contiene las siguientes tablas y columnas:
+        Eres un asistente experto en bases de datos PostgreSQL. Tu tarea es generar únicamente consultas SQL válidas 
+        en base a la pregunta del usuario. La base de datos tiene las siguientes tablas y columnas:
 
         {json.dumps(db_schema, indent=2)}
 
         **Reglas:**
-        1. Devuelve solo la consulta SQL sin explicaciones adicionales.
-        2. Asegúrate de que la consulta sea válida en PostgreSQL.
-        3. Usa alias y joins si es necesario para unir varias tablas.
-        4. Si la pregunta no se puede responder con la base de datos proporcionada, devuelve un mensaje de error.
+        1. Devuelve solo la consulta SQL sin explicaciones adicionales ni comentarios.
+        2. La consulta debe ser válida en PostgreSQL y no debe contener errores de sintaxis.
+        3. Usa `JOIN` cuando sea necesario si la información se encuentra en múltiples tablas.
+        4. No uses nombres de tablas o columnas que no existan en la estructura proporcionada.
+        5. No devuelvas texto descriptivo, solo la consulta SQL.
 
-        **Pregunta del usuario:**
+        **Ejemplos de entrada y salida:**
+
+        Entrada: "¿Cuántos empleados hay en la empresa?"
+        Salida:
+        SELECT COUNT(*) FROM empleados;
+
+        Entrada: "Dame el nombre y salario de los empleados del departamento de ventas."
+        Salida:
+        SELECT nombre, salario FROM empleados WHERE departamento = 'ventas';
+
+        Entrada del usuario:
         "{user_message}"
 
-        **Salida esperada:**
+        Salida esperada (solo consulta SQL válida):
         """
 
         payload = {
             "model": self.model,
             "messages": [{"role": "system", "content": prompt}],
-            "temperature": 0.5
+            "temperature": 0.3
         }
 
         try:
@@ -114,6 +125,12 @@ class Pipeline:
             response_data = response.json()
             if 'choices' in response_data and len(response_data['choices']) > 0:
                 sql_query = response_data['choices'][0]['message']['content'].strip()
+
+                # Validar que la respuesta es SQL válido
+                if not sql_query.lower().startswith(("select", "insert", "update", "delete", "with")):
+                    logging.error(f"Error: El modelo no devolvió SQL válido: {sql_query}")
+                    return "Error: El modelo no devolvió una consulta SQL válida."
+
                 return sql_query
             else:
                 logging.error("La respuesta no contiene contenido válido.")
@@ -123,26 +140,6 @@ class Pipeline:
             logging.error(f"Error al realizar la solicitud a la API de Ollama: {e}")
             return "Error al generar la consulta SQL."
 
-    def execute_query(self, sql_query: str):
-        """Ejecuta la consulta SQL en la base de datos y devuelve los resultados."""
-        try:
-            conn = psycopg2.connect(
-                database=self.valves.DB_DATABASE,
-                user=self.valves.DB_USER,
-                password=self.valves.DB_PASSWORD,
-                host=self.valves.DB_HOST.split('//')[-1],
-                port=self.valves.DB_PORT
-            )
-            cursor = conn.cursor()
-            cursor.execute(sql_query)
-            results = cursor.fetchall()
-            cursor.close()
-            conn.close()
-            return results
-
-        except Exception as e:
-            logging.error(f"Error al ejecutar la consulta SQL: {e}")
-            return []
 
     def generate_natural_language_response(self, query_result: list) -> str:
         """Convierte los resultados de la consulta en una respuesta en lenguaje natural."""
