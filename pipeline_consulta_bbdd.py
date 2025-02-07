@@ -213,11 +213,13 @@ class Pipeline:
                 cursor.execute(sql_query)
                 
                 # Obtener los resultados
-                tables = cursor.fetchall()
+                tables_count, tables= cursor.fetchone()
 
                 # Si no hay tablas que coincidan con la palabra clave, devolver el mensaje apropiado
                 if not tables:
                     return f"No hay tablas para lo que pides"
+                
+                tables_num = "Hay {tables_count} tablas: "
 
                 # Crear una lista de tablas
                 table_list = [f"{schema}.{table}" for schema, table in tables]
@@ -227,7 +229,7 @@ class Pipeline:
                 conn.close()
 
                 # Devolver la lista de tablas como una cadena
-                return str(table_list)
+                return tables_num + str(table_list)
 
         except Exception as e:
                 logging.error(f"Error al obtener las tablas: {e}")
