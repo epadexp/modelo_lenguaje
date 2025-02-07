@@ -59,13 +59,14 @@ class Pipeline:
 
                 Ejemplo correcto:
                 Entrada: Busca las tablas relacionadas con nacimientos
+                palabra_clave: nacimientos
                 Salida:
                 ```sql
                 SELECT table_schema, table_name
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE 'nacimientos';         
+                AND table_name ILIKE '%{palabra_clave}%';         
         """
         
         payload = {
