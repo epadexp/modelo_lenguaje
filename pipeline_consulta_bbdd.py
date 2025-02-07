@@ -52,7 +52,10 @@ class Pipeline:
                 Eres un generador de consultas SQL experto en PostgreSQL.  
                 Tu tarea es generar una consulta SQL válida y segura que busque tablas 
                 relacionadas con un término en su nombre dentro de una base de datos.
+                Busca la palabra clave en el mensaje del usuario y busca en la base de datos 
+                las tablas que contengan esa palabra en su nombre.
                 No agregues explicaciones, solo devuelve la consulta SQL sin texto adicional.
+                No incluyas explicaciones ni ```sql en la respuesta, solo devuelve la consulta.
 
                 Ejemplo correcto:
                 Entrada: Busca las tablas relacionadas con nacimientos
