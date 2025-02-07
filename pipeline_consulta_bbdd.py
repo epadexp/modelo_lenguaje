@@ -51,7 +51,8 @@ class Pipeline:
         prompt = """
                 Eres un generador de consultas SQL experto en PostgreSQL.  
                 Tu tarea es generar una consulta SQL válida y segura que busque tablas 
-                relacionadas con un término en su nombre dentro de una base de datos. 
+                relacionadas con un término en su nombre dentro de una base de datos.
+                No agregues explicaciones, solo devuelve la consulta SQL sin texto adicional.
 
                 Ejemplo correcto:
                 Entrada: Busca las tablas relacionadas con nacimientos
