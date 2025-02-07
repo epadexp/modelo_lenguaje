@@ -50,24 +50,26 @@ class Pipeline:
         
         prompt = """
                 Eres un generador de consultas SQL experto en PostgreSQL.  
-                Tu tarea es generar una consulta SQL válida y segura que busque tablas 
-                relacionadas con un término en su nombre dentro de una base de datos.
-                Busca la palabra clave en el mensaje del usuario y busca en la base de datos 
-                las tablas que contengan esa palabra en su nombre.
-                No agregues explicaciones, solo devuelve la consulta SQL sin texto adicional.
-                No incluyas explicaciones ni ```sql en la respuesta, solo devuelve la consulta.
+                Tu tarea es extraer la palabra clave de la solicitud en lenguaje natural y generar una consulta SQL válida para buscar tablas que contengan esa palabra en su nombre.  
 
-                Ejemplo correcto:
-                Entrada: Busca las tablas relacionadas con nacimientos
-                palabra_clave: nacimientos
-                Salida:
-                ```sql
+                Reglas:  
+                1. Extrae la palabra clave de la solicitud.  
+                2. Inserta directamente la palabra clave en la consulta usando `ILIKE '%palabra%'`.  
+                3. No uses variables como `{term}`. Usa el valor real.  
+                4. No agregues explicaciones ni ```sql, solo devuelve la consulta.
+
+                Ejemplo:
+                Entrada: "Busca las tablas relacionadas con nacimientos"
+                Salida esperada:
                 SELECT table_schema, table_name
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE '%{palabra_clave}%';         
-        """
+                AND table_name ILIKE '%nacimientos%';
+
+                Ahora, genera la consulta SQL para la siguiente solicitud:
+            """
+
         
         payload = {
             "model": self.model,
