@@ -95,16 +95,14 @@ class Pipeline:
         3. Usa `JOIN` si la información se encuentra en múltiples tablas.
         4. No inventes nombres de tablas o columnas. Usa solo las que existen.
         5. No devuelvas texto descriptivo, solo la consulta SQL.
+        6. Si el usuario especifica ine, tienes que buscar entre las tablas que empiezan por ine
+        7. Si el usuario especifica istac, tienes que buscar entre las tablas que empiezan por istac
 
         **Ejemplos de entrada y salida:**
 
-        Entrada: "¿Cuántos empleados hay en la empresa?"
+        Entrada: "¿Cuántos nacimientos hubieron en Aragón en 2023 según el ine?"
         Salida:
-        SELECT COUNT(*) FROM empleados;
-
-        Entrada: "Dame el nombre y salario de los empleados del departamento de ventas."
-        Salida:
-        SELECT nombre, salario FROM empleados WHERE departamento = 'ventas';
+        SELECT COUNT(*) FROM ine_1_3_nacimientos;
 
         Entrada del usuario:
         "{user_message}"
