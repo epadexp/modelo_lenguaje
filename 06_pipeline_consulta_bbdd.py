@@ -105,6 +105,12 @@ class Pipeline:
         Salida:
         SELECT COUNT(*) FROM ine_1_3_nacimientos;
 
+        Entrada: "¿Cuántos nacimientos de hombres hubieron en 2023 según el ine?"
+        Salida:
+        SELECT valor
+        FROM ine_1_3_nacimientos 
+        WHERE sexo = 'hombres' AND periodo = 2023;
+
         Entrada del usuario:
         "{user_message}"
 
