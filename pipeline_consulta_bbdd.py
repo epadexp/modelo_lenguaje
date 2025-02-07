@@ -57,7 +57,7 @@ class Pipeline:
                 3. La consulta debe buscar el nombre de las tablas en la base de datos, filtrando solo por tablas que contengan la palabra clave dada.
                 4. No repitas ni reescribas la solicitud del usuario; solo devuelve la consulta SQL correcta.
                 5. No agregues explicaciones ni ```sql, solo devuelve la consulta.
-                6. Cambia el termino %s por la palabra clave.
+                6. **Debes reemplazar %s por la palabra clave directamente en la consulta, no dejes el parámetro %s en la consulta.**
 
                 **Ejemplo:**
                 Entrada: "Busca las tablas relacionadas con nacimientos"
@@ -67,7 +67,7 @@ class Pipeline:
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE 'nacimientos';
+                AND table_name ILIKE '%nacimientos%';
 
                 **Ejemplo:**
                 Entrada: "Quiero las tablas relacionadas con platanos"
@@ -77,7 +77,7 @@ class Pipeline:
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE 'platanos';
+                AND table_name ILIKE '%platanos%';
 
                 **Ejemplo:**
                 Entrada: "Las tablas sobre parados"
@@ -87,7 +87,7 @@ class Pipeline:
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
-                AND table_name ILIKE 'parados';
+                AND table_name ILIKE '%parados%';
 
 
 
