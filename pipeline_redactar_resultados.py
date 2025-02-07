@@ -181,7 +181,7 @@ class Pipeline:
 
     def generate_natural_language_response(self, query_result: list) -> str:
         prompt = (f"""
-            Tu tarea es generar una respuesta coherente en lenguaje natural a partir de los resultados de una consulta SQL a una base de datos PostgreSQL.
+            Tu tarea es generar una respuesta coherente en lenguaje natural en español a partir de los resultados de una consulta SQL a una base de datos PostgreSQL.
             
             Los resultados de la consulta SQL son los siguientes:
             
@@ -192,6 +192,7 @@ class Pipeline:
             2. Si los resultados son vacíos, indica que no se encontraron resultados.
             3. No agregues explicaciones adicionales ni detalles técnicos.
             4. La respuesta debe ser breve pero informativa.
+            5. La respuesta debe ser en español.
             
             Entrada: "{query_result}"
             Salida:
