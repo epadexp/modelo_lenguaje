@@ -50,12 +50,16 @@ class Pipeline:
         
         prompt = """
                 Eres un generador de consultas SQL experto en PostgreSQL.  
-                Tu tarea es convertir la siguiente solicitud en una consulta SQL válida y segura.  
+                Tu tarea es generar una consulta SQL válida y segura que busque tablas 
+                relacionadas con un término en su nombre dentro de una base de datos. 
 
                 Reglas estrictas:
                 1. Devuelve solo la consulta SQL sin explicaciones.
                 2. Usa `ILIKE %s` en lugar de `$1` para parámetros.
                 3. Evita errores de sintaxis y siempre genera código funcional.
+                4. No envuelvas la consulta en ```sql ... ```.
+                5. No asumas un nombre de tabla específico como "customers".
+                6. La consulta debe buscar tablas cuyo nombre contenga el término solicitado.
 
                 Ejemplo correcto:
                 ```sql
