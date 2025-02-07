@@ -219,7 +219,7 @@ class Pipeline:
                 if not tables:
                     return f"No hay tablas para lo que pides"
                 
-                tables_num = "Hay {tables_count} tablas: "
+                tables_num = f"Hay {tables_count} tablas: "
 
                 # Crear una lista de tablas
                 table_list = [f"{schema}.{table}" for schema, table in tables]
