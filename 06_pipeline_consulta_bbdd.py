@@ -176,6 +176,36 @@ class Pipeline:
         except requests.exceptions.RequestException as e:
             logging.error(f"Error al generar la respuesta en lenguaje natural: {e}")
             return "Error al generar la respuesta."
+        
+    def execute_query(self, sql_query: str):
+        """Ejecuta una consulta SQL en la base de datos PostgreSQL y devuelve los resultados."""
+        try:
+            # Establecer conexión con la base de datos
+            conn = psycopg2.connect(
+                database=self.valves.DB_DATABASE,
+                user=self.valves.DB_USER,
+                password=self.valves.DB_PASSWORD,
+                host=self.valves.DB_HOST.split('//')[-1],
+                port=self.valves.DB_PORT
+            )
+            cursor = conn.cursor()
+
+            # Ejecutar la consulta
+            cursor.execute(sql_query)
+
+            # Obtener los resultados
+            results = cursor.fetchall()
+
+            # Cerrar conexión
+            cursor.close()
+            conn.close()
+
+            return results
+
+        except psycopg2.Error as e:
+            logging.error(f"Error al ejecutar la consulta SQL: {e}")
+            return f"Error en la ejecución de la consulta SQL: {e}"
+
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         """Orquesta la generación y ejecución de la consulta SQL."""
