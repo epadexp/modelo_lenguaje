@@ -60,6 +60,7 @@ class Pipeline:
                 4. No envuelvas la consulta en ```sql ... ```.
                 5. No asumas un nombre de tabla específico como "customers".
                 6. La consulta debe buscar tablas cuyo nombre contenga el término solicitado.
+                7. No uses "search_term" en la consulta. Usa `ILIKE %s` correctamente.
 
                 Ejemplo correcto:
                 ```sql
