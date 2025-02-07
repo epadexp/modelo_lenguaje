@@ -67,7 +67,6 @@ class Pipeline:
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
                 AND table_name ILIKE '%nacimientos%';
 
-                Ahora, genera la consulta SQL para la siguiente solicitud:
             """
 
         
