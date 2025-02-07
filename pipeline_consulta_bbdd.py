@@ -88,6 +88,16 @@ class Pipeline:
                 WHERE table_type = 'BASE TABLE'
                 AND table_schema NOT IN ('information_schema', 'pg_catalog')
                 AND table_name ILIKE '%parados%';
+                  
+                **Ejemplo:**
+                Entrada: "¿Cuántas tablas hay sobre ocupados?"
+                Salida:
+                ```sql 
+                SELECT COUNT(*) AS table_count, array_agg(table_name) AS tables
+                FROM information_schema.tables
+                WHERE table_type = 'BASE TABLE'
+                AND table_schema NOT IN ('information_schema', 'pg_catalog')
+                AND table_name ILIKE '%ocupados%';
 
                 Entrada:"{user_message}"
                 Salida:
