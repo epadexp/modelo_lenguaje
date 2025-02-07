@@ -49,19 +49,23 @@ class Pipeline:
     def generate_sql_query(self, user_message: str) -> str:
         
         prompt = """
-            Eres un generador de consultas SQL para PostgreSQL.  
-            Convierte la siguiente solicitud en una consulta SQL válida y segura.  
-            No agregues explicaciones, solo devuelve la consulta SQL sin texto adicional.  
+            Eres un generador de consultas SQL experto en PostgreSQL.  
+            Tu tarea es convertir la siguiente solicitud en una consulta SQL válida y segura.  
 
-            Si la solicitud implica buscar tablas, toma como ejemplo la siguiente estructura:
+            Reglas estrictas:
+            1. Devuelve solo la consulta SQL sin explicaciones ni texto adicional.
+            2. Usa siempre comillas dobles para identificadores y comillas simples para valores.
+            3. Asegúrate de que la sintaxis sea completamente válida en PostgreSQL.
+            4. Usa `ILIKE` para búsquedas de texto sin distinción de mayúsculas/minúsculas.
+            5. Usa `LIMIT` 100 si no se especifica un límite en la solicitud.
 
+            Ejemplo de consulta para listar tablas:
             ```sql
             SELECT table_schema, table_name
             FROM information_schema.tables
             WHERE table_type = 'BASE TABLE'
             AND table_schema NOT IN ('information_schema', 'pg_catalog')
-            AND table_name ILIKE %s;
-                    
+            AND table_name ILIKE %s;          
         """
         
         payload = {
